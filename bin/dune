@@ -1,0 +1,4 @@
+(executable
+ (public_name lens)
+ (name main)
+ (libraries lens))
