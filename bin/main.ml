@@ -1,4 +1,4 @@
-open Lens.List_lens
+open Lens.Llist
 
 let a = [ 1; 2; 3; 4; 5 ]
 let f = filter (fun x -> x mod 2 == 1)
