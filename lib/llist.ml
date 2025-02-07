@@ -12,12 +12,18 @@ let flatten_lens a b =
       in
       Filter (orig_a, fil_b, actual_i)
   | Filter (orig_a, _, i_a), Map (_, new_b, _) -> Map (orig_a, new_b, i_a)
-  | Map (orig_a, _, i_a), Filter (_, fil_b, i_b) ->
+  | Map (orig_a, new_a, i_a), Filter (_, fil_b, i_b) ->
       let actual_i =
         List.filteri (fun i _ -> List.exists (fun j -> j == i) i_b) i_a
       in
-      Filter (orig_a, fil_b, actual_i)
-  | Map (orig_a, _, i_a), Map (_, new_b, _) -> Map (orig_a, new_b, i_a)
+      let cop = List.combine i_a new_a in
+      let new_orig =
+        List.mapi
+          (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
+          orig_a
+      in
+      Filter (new_orig, fil_b, actual_i)
+  | Map (_, new_a, i_a), Map (_, new_b, _) -> Map (new_a, new_b, i_a)
 
 let filter f l =
   let cop =
@@ -28,12 +34,10 @@ let filter f l =
   Filter (l, ris, index)
 
 let map f l =
-  let cop = List.mapi (fun i e -> (i, f e)) l in
-  let index = List.map (fun (i, _) -> i) cop in
-  let ris = List.map (fun (_, e) -> e) cop in
+  let index = List.init (List.length l) (fun i -> i) in
+  let ris = List.map f l in
   Map (l, ris, index)
 
-(** Given [a; b; c; d] combines d(c(b(a x))) *)
 let combine funcs =
   let rec loop prev other =
     match other with
@@ -55,18 +59,11 @@ let combine funcs =
   | n :: l -> loop n l
   | [] -> raise EmptyCombinationException
 
-let apply f l =
+let under f l =
   match f l with
-  | Filter (_, new_items, indexes) ->
-      let vvv = List.combine indexes new_items in
+  | Filter (orig, _, _) -> orig
+  | Map (orig, new_items, indexes) ->
+      let cop = List.combine indexes new_items in
       List.mapi
-        (fun i e -> match List.assoc_opt i vvv with Some a -> a | None -> e)
-        l
-  | Map (_, new_items, indexes) ->
-      let vvv = List.combine indexes new_items in
-      List.mapi
-        (fun i e -> match List.assoc_opt i vvv with Some a -> a | None -> e)
-        l
-
-(** Infix for `combine` *)
-let ( >>| ) = combine
+        (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
+        orig
