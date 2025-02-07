@@ -1,8 +1,9 @@
-type 'a list_lens =
+type 'a list_lens_internals =
   | Filter of 'a list * 'a list * int list
   | Map of 'a list * 'a list * int list
 
 exception EmptyCombinationException
+exception NotSameShapeException
 
 let flatten_lens a b =
   match (a, b) with
@@ -59,11 +60,24 @@ let combine funcs =
   | n :: l -> loop n l
   | [] -> raise EmptyCombinationException
 
-let under f l =
-  match f l with
-  | Filter (orig, _, _) -> orig
-  | Map (orig, new_items, indexes) ->
-      let cop = List.combine indexes new_items in
-      List.mapi
-        (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
-        orig
+let under transformer filter =
+ fun x ->
+  match filter x with
+  | Filter (orig, proc, indexes) ->
+      let ris = transformer proc in
+      if List.length ris != List.length proc then raise NotSameShapeException
+      else
+        let cop = List.combine indexes ris in
+        List.mapi
+          (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
+          orig
+  | Map (orig, proc, indexes) ->
+      let ris = transformer proc in
+      if List.length ris != List.length proc then raise NotSameShapeException
+      else
+        let cop = List.combine indexes ris in
+        List.mapi
+          (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
+          orig
+
+let ( >>| ) = under
