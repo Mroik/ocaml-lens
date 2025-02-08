@@ -56,22 +56,17 @@ let combine funcs =
 
 let under transformer filter =
  fun x ->
-  match filter x with
-  | Filter (proc, indexes) ->
-      let ris = transformer proc in
-      if List.length ris != List.length proc then raise NotSameShapeException
-      else
-        let cop = List.combine indexes ris in
-        List.mapi
-          (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
-          x
-  | Map (proc, indexes) ->
-      let ris = transformer proc in
-      if List.length ris != List.length proc then raise NotSameShapeException
-      else
-        let cop = List.combine indexes ris in
-        List.mapi
-          (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
-          x
+  let proc, indexes =
+    match filter x with
+    | Filter (proc, indexes) -> (proc, indexes)
+    | Map (proc, indexes) -> (proc, indexes)
+  in
+  let ris = transformer proc in
+  if List.length ris != List.length proc then raise NotSameShapeException
+  else
+    let cop = List.combine indexes ris in
+    List.mapi
+      (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
+      x
 
 let ( >>| ) = under
