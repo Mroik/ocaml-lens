@@ -1,9 +1,11 @@
+exception EmptyCombinationException
+exception NotSameShapeException
+
 type 'a list_lens_internals =
   | Filter of 'a list * int list
   | Map of 'a list * int list
 
-exception EmptyCombinationException
-exception NotSameShapeException
+type ('a, 'b) list_lens = 'a list -> 'b list_lens_internals
 
 let flatten_lens a b =
   match (a, b) with
