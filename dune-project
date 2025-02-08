@@ -5,22 +5,20 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github Mroik/ocaml-lens))
 
-(authors "Author Name <author@example.com>")
+(authors "Mroik <mroik@delayed.space")
 
-(maintainers "Maintainer Name <maintainer@example.com>")
+(maintainers "Mroik <mroik@delayed.space")
 
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(license WTFPL)
 
 (package
  (name lens)
- (synopsis "A short synopsis")
- (description "A longer description")
+ (synopsis "An attempt to replicate APL's ⍢(under) operator.")
+ (description "An attempt to replicate APL's ⍢(under) operator.")
  (depends ocaml)
  (tags
-  ("add topics" "to describe" your project)))
+  (lens)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html

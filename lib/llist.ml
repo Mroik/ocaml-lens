@@ -24,8 +24,7 @@ let filter f l =
   let cop =
     List.mapi (fun i e -> (i, e)) l |> List.filter (fun (_, e) -> f e)
   in
-  let index = List.map (fun (i, _) -> i) cop in
-  let ris = List.map (fun (_, e) -> e) cop in
+  let index, ris = List.split cop in
   Filter (ris, index)
 
 let map f l =
