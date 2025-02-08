@@ -7,7 +7,9 @@ let f2 = filter (fun x -> x < 3)
 let c = combine [ f; m; f2 ]
 let ris = (List.map (fun x -> x * 2) >>| c) a;;
 
-List.iter (fun x -> Printf.printf "%d " x) a;;
-Printf.printf "\n";;
-List.iter (fun x -> Printf.printf "%d " x) ris;;
-Printf.printf "\n"
+List.map (fun x -> string_of_int x) a
+|> String.concat " " |> Printf.printf "%s\n"
+;;
+
+List.map (fun x -> string_of_int x) ris
+|> String.concat " " |> Printf.printf "%s\n"
