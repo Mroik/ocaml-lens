@@ -1,30 +1,24 @@
 type 'a list_lens_internals =
-  | Filter of 'a list * 'a list * int list
-  | Map of 'a list * 'a list * int list
+  | Filter of 'a list * int list
+  | Map of 'a list * int list
 
 exception EmptyCombinationException
 exception NotSameShapeException
 
 let flatten_lens a b =
   match (a, b) with
-  | Filter (orig_a, _, i_a), Filter (_, fil_b, i_b) ->
+  | Filter (_, i_a), Filter (fil_b, i_b) ->
       let actual_i =
         List.filteri (fun i _ -> List.exists (fun j -> i == j) i_b) i_a
       in
-      Filter (orig_a, fil_b, actual_i)
-  | Filter (orig_a, _, i_a), Map (_, new_b, _) -> Map (orig_a, new_b, i_a)
-  | Map (orig_a, new_a, i_a), Filter (_, fil_b, i_b) ->
+      Filter (fil_b, actual_i)
+  | Filter (_, i_a), Map (new_b, _) -> Map (new_b, i_a)
+  | Map (_, i_a), Filter (fil_b, i_b) ->
       let actual_i =
         List.filteri (fun i _ -> List.exists (fun j -> j == i) i_b) i_a
       in
-      let cop = List.combine i_a new_a in
-      let new_orig =
-        List.mapi
-          (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
-          orig_a
-      in
-      Filter (new_orig, fil_b, actual_i)
-  | Map (_, new_a, i_a), Map (_, new_b, _) -> Map (new_a, new_b, i_a)
+      Filter (fil_b, actual_i)
+  | Map (_, i_a), Map (new_b, _) -> Map (new_b, i_a)
 
 let filter f l =
   let cop =
@@ -32,12 +26,12 @@ let filter f l =
   in
   let index = List.map (fun (i, _) -> i) cop in
   let ris = List.map (fun (_, e) -> e) cop in
-  Filter (l, ris, index)
+  Filter (ris, index)
 
 let map f l =
   let index = List.init (List.length l) (fun i -> i) in
   let ris = List.map f l in
-  Map (l, ris, index)
+  Map (ris, index)
 
 let combine funcs =
   let rec loop prev other =
@@ -47,7 +41,7 @@ let combine funcs =
          fun s ->
           let p_ris = prev s in
           let va =
-            match p_ris with Map (_, b, _) -> n b | Filter (_, b, _) -> n b
+            match p_ris with Map (b, _) -> n b | Filter (b, _) -> n b
           in
           flatten_lens p_ris va
         in
@@ -63,21 +57,21 @@ let combine funcs =
 let under transformer filter =
  fun x ->
   match filter x with
-  | Filter (orig, proc, indexes) ->
+  | Filter (proc, indexes) ->
       let ris = transformer proc in
       if List.length ris != List.length proc then raise NotSameShapeException
       else
         let cop = List.combine indexes ris in
         List.mapi
           (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
-          orig
-  | Map (orig, proc, indexes) ->
+          x
+  | Map (proc, indexes) ->
       let ris = transformer proc in
       if List.length ris != List.length proc then raise NotSameShapeException
       else
         let cop = List.combine indexes ris in
         List.mapi
           (fun i e -> match List.assoc_opt i cop with Some a -> a | None -> e)
-          orig
+          x
 
 let ( >>| ) = under
